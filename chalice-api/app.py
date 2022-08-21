@@ -10,6 +10,8 @@ import jwt
 from os import environ as env
 from dotenv import find_dotenv, load_dotenv
 
+import http.client
+
 
 app = Chalice(app_name='chalice-api')
 app.secret_key = env.get("APP_SECRET_KEY")
@@ -107,8 +109,8 @@ def requires_auth(f):
                 payload = jwt.decode(
                     token,
                     rsa_key,
-                    algorithms=[env.get("ALGORITHMS")],
-                    audience=env.get("API_AUDIENCE"),
+                    algorithms=[env.get("AUTH0_ALGORITHMS")],
+                    audience=env.get("AUTH0_API_AUDIENCE"),
                     issuer="https://"+env.get("AUTH0_DOMAIN")+"/"
                 )
             except jwt.ExpiredSignatureError:
@@ -215,3 +217,40 @@ def delete_book(id):
 
     except Exception as e:
         return {'message': error_msg_formatter(e, '030')}
+
+
+def auth0_api_call(endpoint_suffix, body_data):
+
+    body = json.dumps(body_data)
+    conn = http.client.HTTPSConnection(env.get("AUTH0_DOMAIN"))
+    headers = { 'content-type': "application/json" }
+
+    conn.request("POST", endpoint_suffix, body, headers)
+
+    res = conn.getresponse()
+    data = res.read()
+    return (data.decode("utf-8"))
+
+
+
+@app.route('/login', methods=['GET'])
+def login():
+    body_data = {
+        "client_id": env.get("AUTH0_MAPI_CLIENT_ID"),
+        "client_secret" : env.get("AUTH0_MAPI_CLIENT_SECRET"),
+        "audience": "https://" + env.get("AUTH0_DOMAIN") + "/api/v2/",
+        "grant_type": "client_credentials"
+    }
+    return auth0_api_call("/oauth/token", body_data)
+
+
+@app.route('/auth0_client_grant', methods=['GET'])
+def auth0_client_grant():
+    body_data = {
+        "client_id": env.get("AUTH0_MAPI_CLIENT_ID"),
+        "client_secret" : env.get("AUTH0_MAPI_CLIENT_SECRET"),
+        "audience": "https://" + env.get("AUTH0_DOMAIN") + "/api/v2/",
+        "scope": "create:client_grants",
+        "grant_type": "client_credentials"
+    }
+    return auth0_api_call("/api/v2/client-grants", body_data)

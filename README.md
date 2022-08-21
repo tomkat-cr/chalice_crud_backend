@@ -1,5 +1,5 @@
 # soa_crud_backend
-Serverless CRUD Backend based on the AWS Chalice framework, AWS DynamDb database, Auth0 for API authorization, and SOA architecture.
+Serverless CRUD Backend based on the AWS Chalice framework, AWS DynamDb database, and Auth0 for API security.
 
 AWS Chalice is a serverless Python framework developed by Amazon.
 It shares so many similarities in syntax and semantics with Flask.

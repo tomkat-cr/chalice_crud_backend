@@ -6,7 +6,8 @@ from boto3.dynamodb.conditions import Key
 
 from functools import wraps
 import json
-import jwt
+# import jwt
+from jose import jwt
 from os import environ as env
 from dotenv import find_dotenv, load_dotenv
 
@@ -116,13 +117,7 @@ def requires_auth(f):
             except jwt.ExpiredSignatureError:
                 raise AuthError({"code": "token_expired",
                                  "description": "token is expired"}, 401)
-            # except jwt.JWTClaimsError:
-            # AttributeError: module 'jwt' has no attribute 'JWTClaimsError'
-            # https://githubmemory.com/repo/mpdavis/python-jose/issues/197
-            #
-            # except jwt.MissingRequiredClaimError :
-            # https://pyjwt.readthedocs.io/en/stable/api.html?highlight=MissingRequiredClaimError#jwt.exceptions.MissingRequiredClaimError
-            except jwt.MissingRequiredClaimError :
+            except jwt.JWTClaimsError:
                 raise AuthError({"code": "invalid_claims",
                                  "description":
                                  "incorrect claims,"
@@ -219,11 +214,11 @@ def delete_book(id):
         return {'message': error_msg_formatter(e, '030')}
 
 
-def auth0_api_call(endpoint_suffix, body_data):
+def auth0_api_call(endpoint_suffix, body_data, additional_headers = {}):
 
     body = json.dumps(body_data)
     conn = http.client.HTTPSConnection(env.get("AUTH0_DOMAIN"))
-    headers = { 'content-type': "application/json" }
+    headers = { 'content-type': "application/json" } | additional_headers
 
     conn.request("POST", endpoint_suffix, body, headers)
 
@@ -231,6 +226,17 @@ def auth0_api_call(endpoint_suffix, body_data):
     data = res.read()
     return (data.decode("utf-8"))
 
+
+# @app.route('/login', methods=['GET'])
+# def login():
+#     body_data = {
+#         "client_id": env.get("AUTH0_CLIENT_ID"),
+#         "client_secret" : env.get("AUTH0_CLIENT_SECRET"),
+#         # "audience": env.get("AUTH0_API_AUDIENCE"),
+#         "audience": "https://" + env.get("AUTH0_DOMAIN") + "/api/v2/",
+#         "grant_type": "client_credentials"
+#     }
+#     return auth0_api_call("/oauth/token", body_data)
 
 
 @app.route('/login', methods=['GET'])
@@ -248,9 +254,12 @@ def login():
 def auth0_client_grant():
     body_data = {
         "client_id": env.get("AUTH0_MAPI_CLIENT_ID"),
-        "client_secret" : env.get("AUTH0_MAPI_CLIENT_SECRET"),
         "audience": "https://" + env.get("AUTH0_DOMAIN") + "/api/v2/",
-        "scope": "create:client_grants",
-        "grant_type": "client_credentials"
+        # "audience": env.get("AUTH0_API_AUDIENCE"),
+        "scope": ["createclient_grants"],
+        # "grant_type": "client_credentials"
     }
-    return auth0_api_call("/api/v2/client-grants", body_data)
+    additional_headers = {
+        "Authorization": "Bearer " + env.get("AUTH0_MAPI_API_TOKEN")
+    }
+    return auth0_api_call("/api/v2/client-grants", body_data, additional_headers)

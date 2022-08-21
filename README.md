@@ -154,6 +154,7 @@ AUTH0_ENABLED=1
 
 AUTH0_MAPI_CLIENT_ID=XXXXXX
 AUTH0_MAPI_CLIENT_SECRET=XXXXXX
+AUTH0_MAPI_API_TOKEN=XXXXXX
 
 AUTH0_CLIENT_ID=XXXXXX
 AUTH0_CLIENT_SECRET=XXXXXX
@@ -168,9 +169,11 @@ To set the AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET environment variab
 * Go to the Auth0 dashboard, then go to option `Applications > Applications` and click on your App.
 Copy the values for `Domain`, `Client ID` and `Client Secret` and paste it in the corresponding variables.
 
-To get valid tokens, the AUTH0_MAPI_CLIENT_ID and AUTH0_MAPI_CLIENT_SECRET environment variables must be set.
+To get valid tokens, the AUTH0_MAPI_CLIENT_ID and AUTH0_MAPI_CLIENT_SECRET, and AUTH0_MAPI_API_TOKEN environment variables must be set.
 
-* Go to the Auth0 dashboard, then go to option `Applications > API > Auth0 Management API > Test`. Copy the `client_id` and `client_secret` parameter values on the API calls and paste it con the corresponding `AUTH0_MAPI_` variable.
+* Go to the Auth0 dashboard, then go to option `Applications > API > Auth0 Management API > Test`. Copy the `client_id` and `client_secret` parameter values on the API calls and paste it in the corresponding `AUTH0_MAPI_` variable.
+
+* Go to the Auth0 dashboard, then go to option `Applications > API > Auth0 Management API > API Explorer`. Enable the option and copy the `Token` parameter value and paste it in the `AUTH0_MAPI_CLIENT_SECRET` variable.
 
 Now, all the calls to the API must include an `Authorization` header of type `Bearer Token` with an Auth0 valid token.
 

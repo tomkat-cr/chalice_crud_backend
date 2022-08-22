@@ -82,7 +82,7 @@ def get_token_auth_header():
 
 
 def requires_auth(f):
-    """Determines if the Access Token is valid
+    """Wrapper to determine if the Access Token is valid
     """
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -147,6 +147,8 @@ def get_app_db():
 @app.route('/book', methods=['POST'])
 @requires_auth
 def add_book():
+    """Creation
+    """
     data = app.current_request.json_body
     try:
         get_app_db().put_item(Item={
@@ -162,6 +164,8 @@ def add_book():
 @app.route('/', methods=['GET'])
 @requires_auth
 def index():
+    """Read list
+    """
     response = get_app_db().scan()
     data = response.get('Items', None)
     return {'data': data}
@@ -170,6 +174,8 @@ def index():
 @app.route('/book/{id}', methods=['GET'])
 @requires_auth
 def get_book(id):
+    """Read by ID
+    """
     response = get_app_db().query(
         KeyConditionExpression=Key("id").eq(id)
     )
@@ -180,16 +186,19 @@ def get_book(id):
 @app.route('/book/{id}', methods=['PUT'])
 @requires_auth
 def update_book(id):
+    """Update
+    """
     data = app.current_request.json_body
     try:
-        get_app_db().update_item(Key={
-            "id": data['id'],
-            "author": data['author']
-        },
+        get_app_db().update_item(
+            Key={
+                "id": data['id'],
+                "author": data['author']
+            },
             UpdateExpression="set title=:r",
             ExpressionAttributeValues={
-            ':r': data['title']
-        },
+                ':r': data['title']
+            },
             ReturnValues="UPDATED_NEW"
         )
         return {'message': 'ok - UPDATED', 'status': 201}
@@ -200,6 +209,8 @@ def update_book(id):
 @app.route('/book/{id}', methods=['DELETE'])
 @requires_auth
 def delete_book(id):
+    """Delete
+    """
     data = app.current_request.json_body
     try:
         response = get_app_db().delete_item(
@@ -215,7 +226,8 @@ def delete_book(id):
 
 
 def auth0_api_call(endpoint_suffix, body_data, additional_headers = {}):
-
+    """Auth0 API/MAPI call
+    """
     body = json.dumps(body_data)
     conn = http.client.HTTPSConnection(env.get("AUTH0_DOMAIN"))
     headers = { 'content-type': "application/json" } | additional_headers
@@ -241,6 +253,8 @@ def auth0_api_call(endpoint_suffix, body_data, additional_headers = {}):
 
 @app.route('/login', methods=['GET'])
 def login():
+    """Login
+    """
     body_data = {
         "client_id": env.get("AUTH0_MAPI_CLIENT_ID"),
         "client_secret" : env.get("AUTH0_MAPI_CLIENT_SECRET"),
@@ -250,13 +264,16 @@ def login():
     return auth0_api_call("/oauth/token", body_data)
 
 
+
 @app.route('/auth0_client_grant', methods=['GET'])
 def auth0_client_grant():
+    """MAPI call to create client_grants and allow to get client_credentials
+    """
     body_data = {
         "client_id": env.get("AUTH0_MAPI_CLIENT_ID"),
         "audience": "https://" + env.get("AUTH0_DOMAIN") + "/api/v2/",
         # "audience": env.get("AUTH0_API_AUDIENCE"),
-        "scope": ["createclient_grants"],
+        "scope": ["create:client_grants"],
         # "grant_type": "client_credentials"
     }
     additional_headers = {
